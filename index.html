@@ -1,0 +1,1244 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, viewport-fit=cover">
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<meta http-equiv="Pragma" content="no-cache">
+<meta http-equiv="Expires" content="0">
+<title>FUN XPro — Nova Admin</title>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+<style>
+/* ═══════════════════════════════════════════════════
+   FUN XPro — NOVA Admin v10
+   Sound-unlock + seamless loop background video
+   Custom crown mark · unified radius · mobile-stable
+   ═══════════════════════════════════════════════════ */
+:root{
+  --bg0:#030308; --bg1:#07050F; --bg2:#0B0716;
+  --glass: rgba(255,255,255,.05);
+  --glass-brd: rgba(255,255,255,.10);
+  --gold:#FFD84D; --amber:#FF9500; --rose:#FF5E9E; --violet:#8B7CFF; --cyan:#4FE3D8;
+  --danger:#FF4B5C; --danger2:#C81E3A; --mint:#00E3A8;
+  --ink:#F5F3FC; --ink-dim:#A7A2C4; --ink-faint:#5D5980;
+  --sp:cubic-bezier(.16,1,.3,1); --sp2:cubic-bezier(.22,1,.36,1);
+  --holo: linear-gradient(115deg,#FFD84D,#FF9500,#FF5E9E,#8B7CFF,#4FE3D8,#FFD84D);
+  --r-xs:10px; --r-sm:14px; --r-md:18px; --r-lg:24px; --r-xl:30px; --r-pill:999px;
+  --sa-top: env(safe-area-inset-top, 0px);
+  --sa-bot: env(safe-area-inset-bottom, 0px);
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{height:100%}
+body{
+  margin:0;overflow-x:hidden;min-height:100vh;color:var(--ink);
+  font-family:-apple-system,BlinkMacSystemFont,'SF Pro Display','Inter',system-ui,sans-serif;
+  background:linear-gradient(180deg,var(--bg0),var(--bg1) 50%,var(--bg2));
+  -webkit-font-smoothing:antialiased;font-size:14px;
+}
+::-webkit-scrollbar{width:7px;height:7px}
+::-webkit-scrollbar-thumb{background:rgba(255,255,255,.12);border-radius:var(--r-pill)}
+::selection{background:rgba(255,216,77,.28)}
+
+/* ═══ LAYERED BACKGROUND ═══ */
+#bgVideoWrap{position:fixed;inset:0;z-index:0;overflow:hidden;pointer-events:none}
+#bgVideo{position:absolute;top:50%;left:50%;min-width:100%;min-height:100%;width:auto;height:auto;
+  transform:translate(-50%,-50%);object-fit:cover;opacity:0;transition:opacity 1.4s var(--sp2)}
+#bgVideo.ready{opacity:.3}
+#bgVideoTint{position:fixed;inset:0;z-index:0;background:linear-gradient(180deg,rgba(3,3,8,.55),rgba(7,5,15,.75) 50%,rgba(11,7,22,.9));pointer-events:none}
+#pField{position:fixed;inset:0;z-index:0;pointer-events:none;opacity:.5}
+.orb{position:fixed;border-radius:50%;filter:blur(100px);pointer-events:none;z-index:0}
+.o1{width:480px;height:480px;background:radial-gradient(circle,#8B7CFF,transparent 70%);top:-160px;left:-140px;opacity:.26;animation:drift1 26s ease-in-out infinite}
+.o2{width:420px;height:420px;background:radial-gradient(circle,#FFD84D,transparent 70%);bottom:-180px;right:-120px;opacity:.2;animation:drift2 22s ease-in-out infinite}
+.o3{width:340px;height:340px;background:radial-gradient(circle,#FF5E9E,transparent 70%);top:40%;left:60%;opacity:.13;animation:drift3 30s ease-in-out infinite}
+@keyframes drift1{0%,100%{transform:translate(0,0)}50%{transform:translate(60px,-40px)}}
+@keyframes drift2{0%,100%{transform:translate(0,0)}50%{transform:translate(-50px,30px)}}
+@keyframes drift3{0%,100%{transform:translate(0,0) scale(1)}50%{transform:translate(-40px,-30px) scale(1.15)}}
+.grain{position:fixed;inset:0;z-index:1;pointer-events:none;opacity:.03;mix-blend-mode:overlay;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E")}
+
+#mediaToggle{position:fixed;z-index:150;bottom:calc(18px + var(--sa-bot));right:18px;
+  width:48px;height:48px;border-radius:var(--r-pill);display:flex;align-items:center;justify-content:center;
+  background:linear-gradient(160deg,rgba(22,18,36,.75),rgba(10,8,18,.85));
+  border:1px solid var(--glass-brd);backdrop-filter:blur(20px);cursor:pointer;font-size:19px;
+  box-shadow:0 14px 34px rgba(0,0,0,.45);transition:transform .2s var(--sp),box-shadow .25s var(--sp);
+  display:none}
+#mediaToggle.show{display:flex}
+#mediaToggle:hover{transform:scale(1.08)}
+#mediaToggle:active{transform:scale(.9)}
+@keyframes soundPulse{
+  0%,100%{transform:scale(1);box-shadow:0 14px 34px rgba(0,0,0,.45)}
+  50%{transform:scale(1.14);box-shadow:0 14px 34px rgba(255,180,0,.55)}
+}
+
+.holo-text{background:var(--holo);background-size:300% 100%;-webkit-background-clip:text;background-clip:text;
+  color:transparent;animation:holoShift 6s linear infinite}
+@keyframes holoShift{to{background-position:300% 0}}
+
+.crown-mark{display:inline-flex;align-items:center;justify-content:center;filter:drop-shadow(0 4px 10px rgba(255,180,0,.45))}
+@keyframes crownFloat{0%,100%{transform:translateY(0) rotate(0)}50%{transform:translateY(-4px) rotate(-2deg)}}
+
+/* ═══ AUTH GATE ═══ */
+#gate{position:fixed;inset:0;z-index:999;display:flex;align-items:center;justify-content:center;
+  padding:20px;padding-top:calc(20px + var(--sa-top));padding-bottom:calc(20px + var(--sa-bot))}
+.gate-card{position:relative;z-index:1;margin:2px;border-radius:calc(var(--r-xl) - 2px);overflow:hidden;
+  background:linear-gradient(160deg,rgba(20,16,34,.9),rgba(8,6,16,.96));
+  box-shadow:0 40px 100px rgba(0,0,0,.6)}
+@keyframes gateRise{from{opacity:0;transform:perspective(1000px) rotateX(-8deg) translateY(40px) scale(.94)}to{opacity:1;transform:none}}
+.gate-card.wrong{animation:gateShake .45s var(--sp)}
+@keyframes gateShake{0%,100%{transform:translateX(0)}15%{transform:translateX(-11px) rotate(-.6deg)}30%{transform:translateX(9px) rotate(.5deg)}45%{transform:translateX(-7px)}60%{transform:translateX(6px)}75%{transform:translateX(-4px)}90%{transform:translateX(3px)}}
+.gate-inner{padding:clamp(30px,7vw,40px) clamp(24px,6vw,34px) 28px;position:relative}
+
+/* ── Spinning conic-gradient frame — replaces the static HUD corners.
+     Outer wrapper shows a slowly rotating rainbow-glow ring behind the
+     opaque card, so the whole login "capsule" reads as a different
+     object at a glance, not just a recolor. ── */
+.gate-frame{width:100%;max-width:380px;position:relative;border-radius:var(--r-xl);
+  animation:gateRise .7s var(--sp)}
+.gate-frame::before{content:'';position:absolute;inset:-2px;border-radius:inherit;z-index:0;
+  background:conic-gradient(from 0deg,var(--gold),var(--rose),var(--violet),var(--cyan),var(--gold));
+  animation:frameSpin 5s linear infinite}
+@keyframes frameSpin{to{transform:rotate(360deg)}}
+@keyframes hudPulse{0%,100%{opacity:1}50%{opacity:.4}}
+
+/* ── Circular avatar badge (was a hexagon) ── */
+.gate-avatar{position:relative;width:64px;height:64px;margin:0 auto 16px;display:flex;align-items:center;justify-content:center}
+.gate-avatar::before{content:'';position:absolute;inset:-7px;border-radius:50%;
+  background:radial-gradient(circle,rgba(255,216,77,.38),transparent 70%);
+  animation:avatarPulse 2.2s ease-in-out infinite}
+@keyframes avatarPulse{0%,100%{transform:scale(1);opacity:.55}50%{transform:scale(1.2);opacity:1}}
+.gate-avatar-core{position:relative;width:100%;height:100%;border-radius:50%;z-index:1;
+  background:linear-gradient(145deg,#241a08,#0d0902);border:1.5px solid rgba(255,216,77,.45);
+  display:flex;align-items:center;justify-content:center;box-shadow:inset 0 0 20px rgba(255,190,0,.15)}
+
+.gate-title{text-align:center;font-size:clamp(19px,5vw,22px);font-weight:800;letter-spacing:-.2px}
+.blink-cursor{display:inline-block;margin-left:2px;color:var(--cyan);animation:blinkCursor 1s steps(1) infinite}
+@keyframes blinkCursor{50%{opacity:0}}
+.gate-sub{text-align:center;font-size:11px;color:var(--cyan);font-weight:700;letter-spacing:2px;margin-bottom:26px;margin-top:5px}
+
+/* ── Pill-chip input rows (was icon + underline) ── */
+.gfield{display:flex;align-items:stretch;gap:0;margin-bottom:14px;position:relative;
+  border:1.5px solid var(--glass-brd);border-radius:var(--r-pill);overflow:hidden;
+  background:rgba(255,255,255,.03);transition:border-color .25s var(--sp),background .25s var(--sp)}
+.gfield:focus-within{border-color:var(--gold);background:rgba(255,216,77,.05)}
+.gficon{width:42px;flex-shrink:0;display:flex;align-items:center;justify-content:center;
+  font-size:16px;background:rgba(255,255,255,.04);border-right:1px solid var(--glass-brd);opacity:.85}
+.gfwrap{flex:1;min-width:0;padding:6px 14px}
+.gfwrap label{display:block;font-size:9px;color:var(--ink-faint);margin-bottom:1px;font-weight:700;text-transform:uppercase;letter-spacing:.6px}
+.gfwrap input{width:100%;padding:3px 0;border:none;background:transparent;color:var(--ink);font-size:14.5px;
+  outline:none;-webkit-appearance:none}
+.gfield.err{border-color:var(--danger);animation:fieldFlash .5s var(--sp)}
+@keyframes fieldFlash{0%,100%{opacity:1}30%{opacity:.55}}
+
+/* ── Outline button with a vertical scan-line sweep (was a filled
+     gradient with a diagonal shine) ── */
+.gbtn{width:100%;margin-top:14px;cursor:pointer;border:1.5px solid var(--gold);border-radius:var(--r-pill);
+  padding:14px 18px;font-weight:800;font-size:12.5px;letter-spacing:1.5px;position:relative;overflow:hidden;
+  background:rgba(255,216,77,.08);color:var(--gold);
+  display:flex;align-items:center;justify-content:center;gap:8px;
+  transition:transform .16s var(--sp), box-shadow .3s var(--sp), background .3s var(--sp), color .3s var(--sp)}
+.gbtn:active{transform:scale(.96)}
+.gbtn:hover{background:linear-gradient(135deg,var(--gold),var(--amber));color:#1A1204;box-shadow:0 16px 42px rgba(255,180,0,.42)}
+.gbtn.loading{pointer-events:none}
+.gbtn-shine{position:absolute;left:0;right:0;height:2px;top:0;
+  background:linear-gradient(90deg,transparent,#fff,transparent);
+  animation:gbtnScan 2s linear infinite}
+@keyframes gbtnScan{0%{top:0;opacity:0}10%{opacity:1}50%{top:100%}60%{opacity:1}100%{top:100%;opacity:0}}
+.gbtn-arrow{font-size:14px;transition:transform .25s var(--sp)}
+.gbtn:hover .gbtn-arrow{transform:translateX(4px)}
+
+.gate-err{color:var(--danger);font-size:11.5px;margin-top:11px;text-align:center;min-height:14px}
+.gate-status{display:flex;align-items:center;justify-content:center;gap:7px;margin-top:18px;
+  font-size:9.5px;letter-spacing:1.2px;color:var(--ink-faint);font-weight:700}
+.gstat-dot{width:6px;height:6px;border-radius:50%;background:var(--cyan);box-shadow:0 0 6px rgba(79,227,216,.7);
+  animation:hudPulse 1.4s ease-in-out infinite}
+
+#successBurst{position:fixed;inset:0;z-index:1000;display:flex;align-items:center;justify-content:center;pointer-events:none;opacity:0}
+#successBurst.play{opacity:1}
+.burst-check{width:74px;height:74px;border-radius:50%;background:linear-gradient(135deg,var(--mint),#00A87A);
+  display:flex;align-items:center;justify-content:center;font-size:32px;color:#04241A;transform:scale(0);box-shadow:0 0 0 0 rgba(0,227,168,.5)}
+#successBurst.play .burst-check{animation:burstPop .6s var(--sp) forwards, burstRing 1s var(--sp2) forwards}
+@keyframes burstPop{0%{transform:scale(0)}60%{transform:scale(1.15)}100%{transform:scale(1)}}
+@keyframes burstRing{0%{box-shadow:0 0 0 0 rgba(0,227,168,.5)}100%{box-shadow:0 0 0 60px rgba(0,227,168,0)}}
+
+/* ═══ APP SHELL ═══ */
+#app{display:none;position:relative;z-index:2;min-height:100vh}
+#app.show{display:block}
+#app.entering{animation:appEnter .55s var(--sp)}
+@keyframes appEnter{from{opacity:0;transform:scale(.98)}to{opacity:1;transform:none}}
+
+.dock-wrap{position:fixed;top:calc(16px + var(--sa-top));left:50%;transform:translateX(-50%);z-index:100;
+  display:flex;align-items:center;gap:4px;padding:7px;border-radius:var(--r-lg);
+  background:linear-gradient(160deg,rgba(22,18,36,.68),rgba(10,8,18,.78));
+  border:1px solid var(--glass-brd);backdrop-filter:blur(28px);-webkit-backdrop-filter:blur(28px);
+  box-shadow:0 20px 60px rgba(0,0,0,.5), inset 0 1px 0 rgba(255,255,255,.06);max-width:96vw}
+.dock-item{position:relative;display:flex;flex-direction:column;align-items:center;gap:2px;
+  padding:8px 13px;border-radius:var(--r-md);cursor:pointer;color:var(--ink-dim);font-size:9.5px;font-weight:700;
+  transition:all .3s var(--sp);white-space:nowrap;flex-shrink:0}
+.dock-item .di-ic{font-size:16px;transition:transform .3s var(--sp)}
+.dock-item:hover .di-ic{transform:translateY(-2px) scale(1.1)}
+.dock-item.active{color:#1A1204;background:linear-gradient(135deg,var(--gold),var(--amber));box-shadow:0 8px 22px rgba(255,180,0,.35)}
+.dock-brand{display:flex;align-items:center;gap:7px;padding:5px 12px 5px 6px;margin-right:2px;border-right:1px solid rgba(255,255,255,.08)}
+.dock-brand .dbm{width:30px;height:30px;border-radius:var(--r-xs);background:linear-gradient(135deg,#241a08,#0d0902);
+  border:1px solid rgba(255,216,77,.3);display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.dock-brand .dbt{font-size:11px;font-weight:800;white-space:nowrap}
+
+.tabbar{display:none}
+
+.main{max-width:1360px;margin:0 auto;padding:106px 26px 70px}
+.topbar{display:flex;align-items:center;justify-content:space-between;margin-bottom:24px;gap:14px;flex-wrap:wrap}
+.pg-title{font-size:clamp(21px,4.4vw,26px);font-weight:900;letter-spacing:-.5px}
+.pg-sub{font-size:12px;color:var(--ink-dim);margin-top:3px}
+.search-box{position:relative;width:100%;max-width:270px;flex:1 1 220px}
+.search-box input{width:100%;padding:11px 15px 11px 38px;border-radius:var(--r-sm);border:1px solid var(--glass-brd);
+  background:rgba(255,255,255,.035);color:var(--ink);font-size:13px;outline:none;transition:.25s var(--sp);-webkit-appearance:none}
+.search-box input:focus{border-color:rgba(139,124,255,.45);background:rgba(255,255,255,.07);box-shadow:0 0 0 4px rgba(139,124,255,.08)}
+.search-box .ic{position:absolute;left:13px;top:50%;transform:translateY(-50%);opacity:.5;font-size:13px}
+
+.section{display:none}
+.section.active{display:block;animation:morphIn .5s var(--sp2)}
+@keyframes morphIn{from{opacity:0;transform:scale(.98) translateY(6px)}to{opacity:1;transform:none}}
+
+.card3d{--mx:50%; --my:50%;
+  position:relative;border-radius:var(--r-lg);background:var(--glass);border:1px solid var(--glass-brd);
+  backdrop-filter:blur(26px);-webkit-backdrop-filter:blur(26px);
+  box-shadow:0 24px 60px rgba(0,0,0,.4), inset 0 1px 0 rgba(255,255,255,.06);
+  transform-style:preserve-3d;transition:transform .25s var(--sp2), box-shadow .3s var(--sp2);overflow:hidden}
+.card3d::before{content:'';position:absolute;inset:0;pointer-events:none;opacity:0;transition:opacity .3s;
+  background:radial-gradient(320px circle at var(--mx) var(--my), rgba(255,255,255,.09), transparent 55%)}
+.card3d:hover::before{opacity:1}
+.card3d::after{content:'';position:absolute;inset:0;border-radius:var(--r-lg);padding:1px;pointer-events:none;
+  background:var(--holo);background-size:220% 220%;-webkit-mask:linear-gradient(#fff 0 0) content-box,linear-gradient(#fff 0 0);
+  -webkit-mask-composite:xor;mask-composite:exclude;opacity:0;transition:opacity .35s;animation:holoShift 7s linear infinite}
+.card3d:hover::after{opacity:.5}
+
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:14px;margin-bottom:22px}
+.stat{padding:clamp(16px,4vw,22px);position:relative;overflow:hidden;opacity:0;animation:statPop .55s var(--sp) forwards}
+.stat:nth-child(1){animation-delay:.02s}.stat:nth-child(2){animation-delay:.07s}
+.stat:nth-child(3){animation-delay:.12s}.stat:nth-child(4){animation-delay:.17s}
+.stat:nth-child(5){animation-delay:.22s}.stat:nth-child(6){animation-delay:.27s}
+@keyframes statPop{from{opacity:0;transform:perspective(800px) rotateX(-8deg) translateY(18px) scale(.94)}to{opacity:1;transform:none}}
+.stat-ic{width:36px;height:36px;border-radius:var(--r-xs);display:flex;align-items:center;justify-content:center;
+  font-size:17px;margin-bottom:13px;position:relative;z-index:2}
+.stat-val{font-size:clamp(21px,4.5vw,27px);font-weight:900;font-variant-numeric:tabular-nums;letter-spacing:-.5px;position:relative;z-index:2}
+.stat-lbl{font-size:11px;color:var(--ink-dim);margin-top:4px;font-weight:700;position:relative;z-index:2}
+.stat-orb{position:absolute;width:130px;height:130px;border-radius:50%;filter:blur(45px);opacity:.3;top:-45px;right:-45px;z-index:1}
+
+.tbl-wrap{overflow-x:auto;border-radius:var(--r-lg);-webkit-overflow-scrolling:touch}
+table{width:100%;border-collapse:collapse;min-width:720px}
+thead th{text-align:left;font-size:10px;color:var(--ink-faint);font-weight:800;letter-spacing:.6px;
+  text-transform:uppercase;padding:16px 16px 12px;white-space:nowrap}
+tbody tr{transition:background .2s var(--sp)}
+tbody tr:hover{background:rgba(255,255,255,.035)}
+tbody td{padding:13px 16px;font-size:12.5px;border-top:1px solid rgba(255,255,255,.05)}
+.mono{font-family:'SF Mono',ui-monospace,Menlo,monospace;font-variant-numeric:tabular-nums}
+.row-in{opacity:0;animation:rowSlide .45s var(--sp) forwards}
+@keyframes rowSlide{from{opacity:0;transform:translateX(-10px)}to{opacity:1;transform:none}}
+.skel-row td{padding:13px 16px}
+.skel-bar{height:13px;border-radius:var(--r-xs)}
+
+.badge{display:inline-flex;align-items:center;gap:5px;padding:5px 11px;border-radius:var(--r-pill);
+  font-size:10px;font-weight:800;letter-spacing:.2px;white-space:nowrap}
+.badge-vip{background:linear-gradient(135deg,rgba(255,216,77,.2),rgba(255,149,0,.1));color:var(--gold);border:1px solid rgba(255,216,77,.3)}
+.badge-none{background:rgba(255,255,255,.05);color:var(--ink-faint);border:1px solid rgba(255,255,255,.08)}
+.badge-active{background:rgba(0,227,168,.13);color:var(--mint);border:1px solid rgba(0,227,168,.28)}
+.badge-blocked{background:rgba(255,75,92,.13);color:var(--danger);border:1px solid rgba(255,75,92,.28)}
+.badge-warn{background:rgba(255,149,0,.13);color:var(--amber);border:1px solid rgba(255,149,0,.28)}
+
+.act-row{display:flex;gap:6px}
+.ibtn{width:32px;height:32px;border-radius:var(--r-xs);border:1px solid var(--glass-brd);background:rgba(255,255,255,.04);
+  display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:14px;color:var(--ink-dim);
+  transition:all .2s var(--sp2);flex-shrink:0}
+.ibtn:hover{transform:translateY(-2px) scale(1.06);background:rgba(255,255,255,.09);color:var(--ink);box-shadow:0 6px 16px rgba(0,0,0,.3)}
+.ibtn:active{transform:scale(.9)}
+.ibtn.danger:hover{background:rgba(255,75,92,.15);color:var(--danger);border-color:rgba(255,75,92,.35)}
+.ibtn.gold:hover{background:rgba(255,216,77,.15);color:var(--gold);border-color:rgba(255,216,77,.35)}
+
+.overlay{position:fixed;inset:0;background:rgba(3,2,8,.75);backdrop-filter:blur(8px);z-index:200;
+  display:flex;align-items:center;justify-content:center;opacity:0;pointer-events:none;transition:opacity .35s var(--sp);perspective:1200px;padding:16px}
+.overlay.show{opacity:1;pointer-events:auto}
+.sheet{width:430px;max-width:100%;max-height:86vh;overflow-y:auto;border-radius:var(--r-xl);
+  background:linear-gradient(165deg,rgba(22,17,36,.97),rgba(8,6,16,.99));
+  border:1px solid rgba(255,255,255,.11);box-shadow:0 50px 120px rgba(0,0,0,.65),inset 0 1px 0 rgba(255,255,255,.07);
+  padding:0;transform:perspective(1200px) rotateX(-10deg) translateY(30px) scale(.92);opacity:0;
+  transition:transform .42s var(--sp), opacity .32s var(--sp);transform-style:preserve-3d}
+.overlay.show .sheet{transform:perspective(1200px) rotateX(0) translateY(0) scale(1);opacity:1}
+.sheet-strip{height:3px;background:var(--holo);background-size:280% 100%;animation:holoShift 5s linear infinite}
+.sheet-body{padding:clamp(20px,5vw,26px) clamp(18px,5vw,24px) 22px}
+.sheet-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:18px}
+.sheet-title{font-size:17px;font-weight:800}
+.sheet-close{width:30px;height:30px;border-radius:50%;background:rgba(255,255,255,.06);border:none;
+  color:var(--ink-dim);cursor:pointer;font-size:14px;display:flex;align-items:center;justify-content:center;
+  transition:.2s var(--sp);flex-shrink:0}
+.sheet-close:hover{background:rgba(255,255,255,.13);color:var(--ink);transform:rotate(90deg)}
+.kv{display:flex;justify-content:space-between;gap:10px;padding:10px 0;font-size:12px;border-bottom:1px solid rgba(255,255,255,.05)}
+.kv b{color:var(--ink-dim);font-weight:600;flex-shrink:0}
+.kv span{font-weight:700;font-family:'SF Mono',ui-monospace,monospace;text-align:right;word-break:break-word}
+
+.danger-box{background:rgba(255,75,92,.08);border:1px solid rgba(255,75,92,.22);border-radius:var(--r-md);padding:15px;margin:16px 0;font-size:12px;color:#FFB3BC;line-height:1.6}
+.danger-box b{color:var(--danger)}
+/* ── App Branding & Access card (Config/FunJashcore) ── */
+.brand-preview{width:44px;height:41px;flex-shrink:0;padding:2px;border:1px solid var(--glass-brd);border-radius:10px;
+  background:#060705;object-fit:contain;opacity:.18;transition:opacity .2s}
+.brand-num-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.brand-num{display:grid;grid-template-columns:32px 1fr 40px;gap:8px;align-items:center}
+.brand-num-badge{height:38px;display:flex;align-items:center;justify-content:center;border:1px solid var(--glass-brd);
+  border-radius:8px;background:rgba(255,255,255,.03);color:var(--gold);font-weight:900;font-size:13px}
+.brand-num img{width:40px;height:38px;padding:2px;border:1px solid var(--glass-brd);border-radius:8px;
+  background:#060705;object-fit:contain;opacity:.18;transition:opacity .2s}
+@media(max-width:520px){.brand-num-grid{grid-template-columns:1fr}}
+.confirm-input{width:100%;padding:13px 15px;border-radius:var(--r-sm);border:1.5px solid rgba(255,75,92,.32);
+  background:rgba(255,75,92,.05);color:var(--ink);font-size:13.5px;margin-top:10px;outline:none;
+  font-family:'SF Mono',ui-monospace,monospace;letter-spacing:.5px;transition:.2s var(--sp);-webkit-appearance:none}
+.confirm-input:focus{border-color:var(--danger);background:rgba(255,75,92,.09);box-shadow:0 0 0 4px rgba(255,75,92,.08)}
+.sheet-actions{display:flex;gap:10px;margin-top:18px}
+.btn-danger{flex:1;background:linear-gradient(135deg,var(--danger),var(--danger2));color:#fff;box-shadow:0 12px 28px rgba(255,75,92,.3)}
+.btn-danger:disabled{opacity:.35;cursor:not-allowed;box-shadow:none}
+.btn-ghost{flex:1;background:rgba(255,255,255,.05);color:var(--ink);border:1px solid var(--glass-brd)}
+.btn-ghost:hover{background:rgba(255,255,255,.1)}
+.btn-gold{background:linear-gradient(135deg,var(--gold),var(--amber));color:#1A1204;box-shadow:0 12px 28px rgba(255,180,0,.3)}
+
+.skel{background:linear-gradient(90deg,rgba(255,255,255,.04) 25%,rgba(255,255,255,.1) 37%,rgba(255,255,255,.04) 63%);
+  background-size:400% 100%;animation:shimmer 1.5s ease infinite;border-radius:var(--r-xs)}
+@keyframes shimmer{0%{background-position:100% 0}100%{background-position:-100% 0}}
+.orbit-loader{width:22px;height:22px;position:relative}
+.orbit-loader::before,.orbit-loader::after{content:'';position:absolute;width:6px;height:6px;border-radius:50%;background:currentColor;top:50%;left:50%;margin:-3px}
+.orbit-loader::before{animation:orbit 1s linear infinite}
+.orbit-loader::after{animation:orbit 1s linear infinite reverse;opacity:.5}
+@keyframes orbit{from{transform:rotate(0) translateX(9px) rotate(0)}to{transform:rotate(360deg) translateX(9px) rotate(-360deg)}}
+
+#toasts{position:fixed;top:calc(90px + var(--sa-top));left:50%;transform:translateX(-50%);z-index:500;
+  display:flex;flex-direction:column;gap:9px;align-items:center;pointer-events:none;width:92vw;max-width:400px}
+.toast{min-width:220px;max-width:100%;padding:13px 18px;border-radius:var(--r-pill);
+  background:linear-gradient(135deg,rgba(24,20,36,.97),rgba(12,10,22,.98));
+  border:1px solid rgba(255,255,255,.12);box-shadow:0 18px 44px rgba(0,0,0,.5);
+  display:flex;align-items:center;gap:11px;font-size:12.5px;font-weight:700;animation:toastDrop .45s var(--sp);pointer-events:auto}
+@keyframes toastDrop{from{opacity:0;transform:translateY(-30px) scale(.9)}to{opacity:1;transform:none}}
+.toast.out{animation:toastLift .3s var(--sp) forwards}
+@keyframes toastLift{to{opacity:0;transform:translateY(-20px) scale(.94)}}
+.toast .tic{width:24px;height:24px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;flex-shrink:0}
+.toast.success .tic{background:rgba(0,227,168,.18);color:var(--mint)}
+.toast.error .tic{background:rgba(255,75,92,.18);color:var(--danger)}
+.toast.info .tic{background:rgba(139,124,255,.18);color:var(--violet)}
+
+.empty{text-align:center;padding:56px 20px;color:var(--ink-faint)}
+.empty .ic{font-size:38px;margin-bottom:12px;opacity:.5;animation:floatIc 3s ease-in-out infinite}
+@keyframes floatIc{0%,100%{transform:translateY(0)}50%{transform:translateY(-8px)}}
+.empty p{font-size:13px}
+.more-item{display:flex;align-items:center;gap:14px;padding:15px 6px;border-radius:var(--r-md);cursor:pointer;
+  transition:background .2s var(--sp2)}
+.more-item:hover,.more-item:active{background:rgba(255,255,255,.05)}
+.more-item .mi-ic{font-size:22px;width:38px;height:38px;border-radius:var(--r-sm);background:rgba(255,216,77,.1);
+  display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.more-item .mi-t{font-size:13.5px;font-weight:800}
+.more-item .mi-s{font-size:11px;color:var(--ink-dim);margin-top:1px}
+.nav-badge{position:absolute;top:2px;right:2px;min-width:15px;height:15px;padding:0 3px;border-radius:var(--r-pill);
+  background:var(--danger);color:#fff;font-size:9px;font-weight:800;display:flex;align-items:center;justify-content:center;
+  box-shadow:0 0 0 2px rgba(10,8,18,.9)}
+.ti{position:relative}
+.more-item{position:relative}
+.more-item .nav-badge{position:absolute;top:8px;right:8px}
+.ref-code-row{display:flex;align-items:center;gap:8px}
+.ref-toggle{position:relative;width:38px;height:21px;border-radius:11px;background:rgba(255,255,255,.1);
+  border:1px solid rgba(255,255,255,.15);cursor:pointer;flex-shrink:0;transition:background .25s var(--sp)}
+.ref-toggle.on{background:linear-gradient(135deg,var(--mint),#00A87A);border-color:transparent}
+.ref-toggle::after{content:'';position:absolute;top:2px;left:2px;width:15px;height:15px;border-radius:50%;
+  background:#fff;transition:transform .25s var(--sp);box-shadow:0 2px 4px rgba(0,0,0,.3)}
+.ref-toggle.on::after{transform:translateX(17px)}
+.ruCard{border-radius:var(--r-md);background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.08);
+  padding:14px;margin-bottom:10px}
+.ruTop{display:flex;align-items:flex-start;justify-content:space-between;gap:10px;margin-bottom:10px}
+.ruMob{font-size:13.5px;font-weight:800;font-family:'SF Mono',monospace}
+.ruMeta{font-size:10.5px;color:var(--ink-faint);margin-top:3px}
+.ruBadges{display:flex;flex-direction:column;align-items:flex-end;gap:5px;flex-shrink:0}
+.ruMid{display:flex;gap:14px;margin-bottom:12px;padding:10px 12px;border-radius:var(--r-sm);
+  background:rgba(0,0,0,.2)}
+.ruStat{display:flex;align-items:center;gap:6px;font-size:11px;font-weight:700;flex:1}
+.ruStat img{width:14px;height:14px;flex-shrink:0}
+.ruStat.ok{color:var(--mint)}
+.ruStat.warn{color:var(--amber)}
+.ruActions{display:flex;flex-wrap:wrap;gap:6px}
+.ruBtn{flex:1;min-width:74px;padding:8px 6px;border-radius:10px;border:1px solid var(--glass-brd);
+  background:rgba(255,255,255,.04);color:var(--ink);font-size:10px;font-weight:800;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;gap:4px;transition:all .2s var(--sp2)}
+.ruBtn:hover{background:rgba(255,255,255,.09);transform:translateY(-1px)}
+.ruBtn img{width:12px;height:12px}
+.ruBtn.gold{border-color:rgba(255,216,77,.35);color:var(--gold)}
+.ruBtn.danger{border-color:rgba(255,75,92,.35);color:var(--danger)}
+.ruBtn.mint{border-color:rgba(0,227,168,.35);color:var(--mint)}
+
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.card-pad{padding:clamp(18px,4.5vw,24px)}
+.hdr-row{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;flex-wrap:wrap;gap:8px}
+.hdr-row h3{font-size:14.5px;font-weight:800;margin:0;display:flex;align-items:center;gap:8px}
+select.field-i,input.field-i{width:100%;padding:12px 14px;border-radius:var(--r-sm);border:1px solid var(--glass-brd);
+  background:rgba(255,255,255,.035);color:var(--ink);font-size:14px;outline:none;transition:.2s var(--sp);-webkit-appearance:none}
+select.field-i:focus,input.field-i:focus{border-color:rgba(255,216,77,.45);background:rgba(255,255,255,.07)}
+label.f-lbl{display:block;font-size:10px;color:var(--ink-faint);margin-bottom:7px;font-weight:800;text-transform:uppercase;letter-spacing:.5px}
+
+@media(max-width:780px){
+  .dock-wrap{display:none}
+  .main{padding:20px 14px calc(96px + var(--sa-bot))}
+  .tabbar{display:flex;position:fixed;left:0;right:0;bottom:0;z-index:100;padding:8px 10px calc(8px + var(--sa-bot));gap:3px;
+    background:linear-gradient(180deg,rgba(10,8,18,.5),rgba(8,6,16,.96) 40%);backdrop-filter:blur(24px);-webkit-backdrop-filter:blur(24px);
+    border-top:1px solid var(--glass-brd)}
+  .tabbar .ti{flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;padding:7px 2px;border-radius:var(--r-sm);color:var(--ink-faint);cursor:pointer;transition:all .25s var(--sp)}
+  .tabbar .ti .ti-ic{font-size:19px;transition:transform .25s var(--sp)}
+  .tabbar .ti .ti-lbl{font-size:9px;font-weight:700}
+  .tabbar .ti.active{color:var(--gold)}
+  .tabbar .ti.active .ti-ic{transform:translateY(-3px) scale(1.15)}
+  .stats{grid-template-columns:repeat(2,1fr)}
+  .grid2{grid-template-columns:1fr}
+  .overlay{align-items:flex-end;padding:0}
+  .sheet{width:100%;max-width:100%;border-radius:var(--r-xl) var(--r-xl) 0 0;max-height:88vh;
+    transform:translateY(100%);transition:transform .38s var(--sp), opacity .3s var(--sp)}
+  .overlay.show .sheet{transform:translateY(0)}
+  .card3d{transform:none !important}
+  #mediaToggle{bottom:calc(90px + var(--sa-bot))}
+}
+@media(max-width:420px){ .stat-val{font-size:19px} table{min-width:640px} }
+</style>
+</head>
+<body>
+
+<div id="bgVideoWrap"><video id="bgVideo" muted loop autoplay playsinline preload="auto"></video></div>
+<div id="bgVideoTint"></div>
+<canvas id="pField"></canvas>
+<div class="orb o1"></div><div class="orb o2"></div><div class="orb o3"></div>
+<div class="grain"></div>
+<div id="mediaToggle" onclick="toggleMedia()" title="Toggle background sound">🔇</div>
+
+<svg width="0" height="0" style="position:absolute">
+  <defs>
+    <linearGradient id="crownGrad" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#FFE98A"/><stop offset="45%" stop-color="#FFD84D"/><stop offset="100%" stop-color="#FF9500"/>
+    </linearGradient>
+  </defs>
+</svg>
+
+<!-- ═══ AUTH GATE ═══ -->
+<div id="gate">
+  <div class="gate-frame" id="gateFrame">
+  <div class="gate-card" id="gateCard">
+    <div class="gate-inner">
+      <div class="gate-avatar">
+        <div class="gate-avatar-core">
+          <svg viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg" width="32" height="32">
+            <defs><linearGradient id="gateShieldGrad" x1="0" y1="0" x2="1" y2="1">
+              <stop offset="0%" stop-color="#FFD84D"/><stop offset="55%" stop-color="#FF9500"/><stop offset="100%" stop-color="#8B7CFF"/>
+            </linearGradient></defs>
+            <path d="M32 4L54 13V29C54 44 45 54 32 60C19 54 10 44 10 29V13L32 4Z" fill="url(#gateShieldGrad)" stroke="#FFF4CC" stroke-width="1.2" stroke-linejoin="round"/>
+            <rect x="24" y="29" width="16" height="13" rx="2.5" fill="#1A1204"/>
+            <path d="M27 29V25a5 5 0 0110 0v4" stroke="#1A1204" stroke-width="2.4" fill="none" stroke-linecap="round"/>
+            <circle cx="32" cy="35" r="2" fill="#FFD84D"/>
+          </svg>
+        </div>
+      </div>
+      <div class="gate-title holo-text">FUN XPro Nova<span class="blink-cursor">_</span></div>
+      <div class="gate-sub">▲ SECURE ADMIN LOGIN ▲</div>
+
+      <div class="gfield" id="fUrl">
+        <span class="gficon">🔗</span>
+        <div class="gfwrap">
+          <label>Firebase Database URL</label>
+          <input id="gFbUrl" placeholder="https://your-project.firebaseio.com">
+        </div>
+      </div>
+      <div class="gfield" id="fPass">
+        <span class="gficon">🔒</span>
+        <div class="gfwrap">
+          <label>Admin Password</label>
+          <input id="gPass" type="password" placeholder="••••••••">
+        </div>
+      </div>
+
+      <button class="gbtn" id="loginBtn" type="button">
+        <span class="gbtn-shine"></span><span class="gbtn-txt">UNLOCK CONSOLE</span><span class="gbtn-arrow">➜</span>
+      </button>
+      <div class="gate-err" id="gateErr"></div>
+      <div class="gate-status"><span class="gstat-dot"></span>SECURE CONNECTION</div>
+      <div style="text-align:center;margin-top:10px">
+        <span id="clearDataLink" style="font-size:9.5px;color:rgba(255,255,255,.25);text-decoration:underline;cursor:pointer">Reset saved login</span>
+      </div>
+      <div style="text-align:center;margin-top:6px;font-size:9px;color:rgba(255,255,255,.15);letter-spacing:1px">BUILD v26</div>
+    </div>
+  </div>
+  </div>
+</div>
+<div id="successBurst"><div class="burst-check">✓</div></div>
+
+<!-- ═══ APP SHELL ═══ -->
+<div id="app">
+  <div class="dock-wrap">
+    <div class="dock-brand"><div class="dbm"><div class="crown-mark" style="width:70%;height:70%">
+      <svg viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M8 46L4 20L18 30L32 12L46 30L60 20L56 46H8Z" fill="url(#crownGrad)"/>
+        <rect x="8" y="46" width="48" height="7" rx="2" fill="url(#crownGrad)"/>
+        <circle cx="32" cy="12" r="3.2" fill="#FF5E9E"/><circle cx="4" cy="20" r="2.6" fill="#4FE3D8"/><circle cx="60" cy="20" r="2.6" fill="#4FE3D8"/>
+      </svg>
+    </div></div><div class="dbt holo-text">NOVA</div></div>
+    <div class="dock-item active" data-sec="users" onclick="goSec('users')"><span class="di-ic">👥</span><span>Users</span></div>
+    <div class="dock-item" data-sec="deps" onclick="goSec('deps')"><span class="di-ic">💰</span><span>Deposits</span></div>
+    <div class="dock-item" data-sec="audit" onclick="goSec('audit')"><span class="di-ic">📜</span><span>Audit</span></div>
+    <div class="dock-item" data-sec="config" onclick="goSec('config')"><span class="di-ic">⚙️</span><span>Config</span></div>
+  </div>
+
+  <div class="tabbar">
+    <div class="ti active" data-sec="users" onclick="goSec('users')"><span class="ti-ic">👥</span><span class="ti-lbl">Users</span></div>
+    <div class="ti" data-sec="deps" onclick="goSec('deps')"><span class="ti-ic">💰</span><span class="ti-lbl">Deposits</span></div>
+    <div class="ti" data-sec="audit" onclick="goSec('audit')"><span class="ti-ic">📜</span><span class="ti-lbl">Audit</span></div>
+    <div class="ti" data-sec="config" onclick="goSec('config')"><span class="ti-ic">⚙️</span><span class="ti-lbl">Config</span></div>
+  </div>
+
+  <div class="main">
+    <div class="section active" id="sec-users">
+      <div class="topbar"><div><div class="pg-title">All Users</div><div class="pg-sub">Manage accounts, bans, and full deletions</div></div>
+        <div class="search-box"><span class="ic">🔍</span><input id="userSearch" placeholder="Search mobile or UID…" oninput="renderUsers()"></div></div>
+      <div class="card3d" onmousemove="tilt3d(event,this)" onmouseleave="untilt3d(this)">
+        <div class="tbl-wrap"><table><thead><tr><th>Mobile</th><th>UID</th><th>Deposited</th><th>Status</th><th style="text-align:right">Actions</th></tr></thead>
+          <tbody id="usersBody"><tr class="skel-row"><td colspan="5"><div class="skel skel-bar"></div></td></tr>
+          <tr class="skel-row"><td colspan="5"><div class="skel skel-bar"></div></td></tr>
+          <tr class="skel-row"><td colspan="5"><div class="skel skel-bar"></div></td></tr></tbody></table></div>
+        <div id="usersEmpty" class="empty" style="display:none"><div class="ic">👥</div><p>No users found</p></div>
+      </div>
+    </div>
+
+    <div class="section" id="sec-deps">
+      <div class="topbar"><div><div class="pg-title">Deposits</div><div class="pg-sub">Auto-detected (live wallet balance) + manual entries</div></div></div>
+      <div class="card3d card-pad" style="margin-bottom:16px" onmousemove="tilt3d(event,this)" onmouseleave="untilt3d(this)">
+        <div class="hdr-row"><h3>➕ Add Manual Deposit</h3></div>
+        <div class="grid2"><div><label class="f-lbl">Mobile Number</label><input class="field-i" id="mdMobile" placeholder="10-digit mobile"></div>
+          <div><label class="f-lbl">Amount (₹)</label><input class="field-i" id="mdAmount" type="number" placeholder="500"></div></div>
+        <button class="btn btn-gold" style="margin-top:15px;width:100%" onclick="addManualDeposit()">Add Deposit</button>
+      </div>
+
+      <div class="card3d card-pad" style="margin-bottom:16px" onmousemove="tilt3d(event,this)" onmouseleave="untilt3d(this)">
+        <div class="hdr-row" style="flex-wrap:wrap;gap:10px">
+          <h3>🎯 Deposit Required — Auto Tracking</h3>
+          <div style="display:flex;gap:8px;align-items:center;margin-left:auto">
+            <div class="search-box" style="min-width:150px"><span class="ic">🔍</span><input id="depReqSearch" placeholder="Search mobile…" oninput="renderDepositReq()"></div>
+            <button class="btn btn-ghost" style="padding:8px 14px;font-size:12px;white-space:nowrap" onclick="openTodayReqList()">📋 Today Request List</button>
+          </div>
+        </div>
+        <p style="font-size:12px;color:var(--ink-dim);line-height:1.6;margin:0 0 13px">
+          Every user is listed below — tap <b style="color:var(--cyan)">Deposit Set</b> on anyone to require an extra deposit. Enter, say,
+          ₹300: the target becomes their <i>current</i> live balance + ₹300. Fully automatic — the instant their live wallet balance reaches
+          that target, the popup clears itself on their screen and marks <b style="color:var(--mint)">Fulfilled</b> here. Use
+          <b style="color:var(--gold)">📋 Today Request List</b> to see everything sent today, with a manual override if you ever need to
+          force-clear one yourself.
+        </p>
+        <div class="tbl-wrap"><table><thead><tr><th>Mobile</th><th>Live Balance</th><th>Deposit Status</th><th style="text-align:right">Action</th></tr></thead><tbody id="depReqBody"></tbody></table></div>
+        <div id="depReqEmpty" class="empty" style="display:none"><div class="ic">👥</div><p>No users found</p></div>
+      </div>
+
+      <div class="card3d" onmousemove="tilt3d(event,this)" onmouseleave="untilt3d(this)">
+        <div class="tbl-wrap"><table><thead><tr><th>Mobile</th><th>Amount</th><th>Source</th><th>Time</th></tr></thead><tbody id="depsBody"></tbody></table></div>
+        <div id="depsEmpty" class="empty" style="display:none"><div class="ic">💰</div><p>No deposits yet</p></div>
+      </div>
+    </div>
+
+    <div class="section" id="sec-audit">
+      <div class="topbar"><div><div class="pg-title">Audit Log</div><div class="pg-sub">Every admin and system action, timestamped</div></div></div>
+      <div class="card3d" onmousemove="tilt3d(event,this)" onmouseleave="untilt3d(this)">
+        <div class="tbl-wrap"><table><thead><tr><th>Actor</th><th>Action</th><th>Target</th><th>Time</th></tr></thead><tbody id="auditBody"></tbody></table></div>
+      </div>
+    </div>
+
+    <div class="section" id="sec-config">
+      <div class="topbar"><div><div class="pg-title">Config</div><div class="pg-sub">Branding, access &amp; app-wide settings</div></div></div>
+      <div class="card3d card-pad" onmousemove="tilt3d(event,this)" onmouseleave="untilt3d(this)">
+        <div class="hdr-row"><h3>🎨 App Branding &amp; Access</h3></div>
+        <p style="font-size:11.5px;color:var(--ink-dim);margin:0 0 15px">Controls the WebView app's title, deposit threshold, number-pad images and WinGo route — Firebase <span class="mono" style="color:var(--violet)">Config/FunJashcore</span>.</p>
+        <div class="grid2">
+          <div><label class="f-lbl">Title</label><input class="field-i" id="brTitle" placeholder="FUN JASHCORE"></div>
+          <div><label class="f-lbl">Subtitle</label><input class="field-i" id="brSubtitle" placeholder="TOOL SIGNAL"></div>
+        </div>
+        <div class="grid2" style="margin-top:13px">
+          <div><label class="f-lbl">Tool Deposit Amount (₹)</label><input class="field-i" id="brToolDep" type="number" min="0" step="1" inputmode="numeric" placeholder="300"></div>
+          <div><label class="f-lbl">WinGo Route</label><input class="field-i" id="brWingoUrl" placeholder="#/main/WinGo?typeId=1"></div>
+        </div>
+        <div style="margin-top:17px">
+          <div class="f-lbl" style="margin-bottom:10px">Number Images (0–9)</div>
+          <div class="brand-num-grid" id="brNumGrid"></div>
+        </div>
+        <button class="btn btn-gold" style="margin-top:17px;width:100%" id="brSaveBtn" onclick="saveBranding()">Save Branding &amp; Access</button>
+      </div>
+
+      <div class="card3d card-pad" style="margin-top:16px" onmousemove="tilt3d(event,this)" onmouseleave="untilt3d(this)">
+        <div class="hdr-row"><h3>⚙️ App Settings</h3></div>
+        <div class="grid2">
+          <div><label class="f-lbl">Min Deposit to Detect (₹)</label><input class="field-i" id="cfgMin"></div>
+          <div><label class="f-lbl">Low Balance Threshold (₹)</label><input class="field-i" id="cfgLowBal" type="number" placeholder="50"></div>
+          <div style="grid-column:1/-1"><label class="f-lbl">Telegram Support Link</label><input class="field-i" id="cfgTg"></div>
+          <div style="grid-column:1/-1"><label class="f-lbl">App Download URL</label><input class="field-i" id="cfgDl"></div>
+        </div>
+        <button class="btn btn-gold" style="margin-top:17px;width:100%" onclick="saveConfig()">Save Config</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div id="toasts"></div>
+
+<div class="overlay" id="ovDetail" onclick="if(event.target===this)closeOv('ovDetail')">
+  <div class="sheet"><div class="sheet-strip"></div><div class="sheet-body">
+    <div class="sheet-head"><div class="sheet-title">User Details</div><button class="sheet-close" onclick="closeOv('ovDetail')">✕</button></div>
+    <div id="detailBody"></div></div></div>
+</div>
+
+<div class="overlay" id="ovDepositReq" onclick="if(event.target===this)closeOv('ovDepositReq')">
+  <div class="sheet" style="max-width:390px"><div class="sheet-strip"></div><div class="sheet-body">
+    <div class="sheet-head"><div class="sheet-title">🎯 Set Deposit Required</div><button class="sheet-close" onclick="closeOv('ovDepositReq')">✕</button></div>
+    <p style="font-size:13px;color:var(--ink-dim);line-height:1.65">Requires <b id="depReqMob" style="color:var(--ink)"></b> to deposit more on top of their current balance. Current live wallet balance: <b id="depReqCurBal" style="color:var(--mint)">₹0</b>.</p>
+    <div><label class="f-lbl">Extra Deposit Required (₹)</label><input class="field-i" id="depReqAmount" type="number" placeholder="e.g. 300" oninput="depReqUpdatePreview()"></div>
+    <div class="danger-box" style="margin-top:13px;background:rgba(0,240,255,.08);border-color:rgba(0,240,255,.25);color:#B8F5FF">
+      <b style="color:var(--cyan)">How it works.</b> Next time this user opens WinGo, a mandatory "Deposit ₹<span id="depReqAmountPreview">0</span> to Continue" popup shows with a DEPOSIT NOW button. Target wallet balance: <b style="color:#FFD700">₹<span id="depReqTargetPreview">0</span></b> (current balance + this amount). The instant their live wallet balance reaches that target, it clears itself automatically — no manual confirmation needed.
+    </div>
+    <div class="sheet-actions"><button class="btn btn-ghost" onclick="closeOv('ovDepositReq')">Cancel</button><button class="btn btn-gold" id="depReqSendBtn" onclick="confirmSendDepositReq()">Send Requirement</button></div>
+  </div></div>
+</div>
+
+<div class="overlay" id="ovTodayReq" onclick="if(event.target===this)closeOv('ovTodayReq')">
+  <div class="sheet" style="max-width:560px"><div class="sheet-strip"></div><div class="sheet-body">
+    <div class="sheet-head"><div class="sheet-title">📋 Today's Deposit Requests</div><button class="sheet-close" onclick="closeOv('ovTodayReq')">✕</button></div>
+    <p style="font-size:12px;color:var(--ink-dim);line-height:1.6;margin:0 0 13px">Every Deposit Required requirement sent today, whether still pending or already fulfilled automatically. <b style="color:var(--mint)">Complete Deposit</b> is a manual override — use it only if you need to force-clear one yourself instead of waiting for the automatic balance check.</p>
+    <div class="tbl-wrap"><table><thead><tr><th>Mobile</th><th>Required</th><th>Target</th><th>Live Balance</th><th>Status</th><th style="text-align:right">Manage</th></tr></thead><tbody id="todayReqBody"></tbody></table></div>
+    <div id="todayReqEmpty" class="empty" style="display:none"><div class="ic">📋</div><p>No requests sent today</p></div>
+    <div class="sheet-actions"><button class="btn btn-ghost" onclick="closeOv('ovTodayReq')">Close</button></div>
+  </div></div>
+</div>
+
+<div class="overlay" id="ovDelete" onclick="if(event.target===this)closeOv('ovDelete')">
+  <div class="sheet" style="max-width:410px"><div class="sheet-strip"></div><div class="sheet-body">
+    <div class="sheet-head"><div class="sheet-title">🗑️ Delete User — Full Wipe</div><button class="sheet-close" onclick="closeOv('ovDelete')">✕</button></div>
+    <p style="font-size:13px;color:var(--ink-dim);line-height:1.65">Permanently deletes everything for <b id="deleteMob" style="color:var(--ink)"></b>:</p>
+    <ul style="font-size:12px;color:var(--ink-dim);line-height:1.95;margin:10px 0 0;padding-left:19px">
+      <li>Profile, UID, device & login data</li><li>VIP status, key & entitlements</li><li>All deposit history</li>
+      <li>Their referral code & link</li><li>Notifications & badge counts</li></ul>
+    <div class="danger-box"><b>Cannot be undone.</b> Type the mobile number below to confirm.</div>
+    <input class="confirm-input" id="deleteConfirmInput" placeholder="Type mobile number exactly" oninput="checkDeleteConfirm()">
+    <div class="sheet-actions"><button class="btn btn-ghost" onclick="closeOv('ovDelete')">Cancel</button><button class="btn btn-danger" id="deleteBtn" disabled onclick="confirmDeleteUser()">Delete Everything</button></div>
+  </div></div>
+</div>
+
+<script>
+// ═══════════════════════════════════════════
+//  BACKGROUND VIDEO — sound-unlock + seamless loop
+//  Hosted on GitHub (raw.githubusercontent.com serves
+//  raw bytes directly — no Drive virus-scan wall)
+//  File confirmed to contain AAC audio (48kHz stereo) —
+//  if sound still doesn't play after tapping the toggle,
+//  it's Chrome's per-site "Sound" permission blocking it,
+//  not the video. The toggle below detects that case and
+//  tells the person exactly what to do about it.
+// ═══════════════════════════════════════════
+const VIDEO_SRC = "https://raw.githubusercontent.com/jahid9088/A-brand-new-admin-panel-system/main/1777899277608.mp4";
+const bgVideo = document.getElementById('bgVideo');
+const mediaToggle = document.getElementById('mediaToggle');
+let videoWorking = false;
+
+try{
+  bgVideo.src = VIDEO_SRC;
+  bgVideo.volume = 1.0;
+
+  bgVideo.addEventListener('loadeddata', ()=>{
+    bgVideo.classList.add('ready');
+    videoWorking = true;
+    mediaToggle.classList.add('show');
+  });
+
+  bgVideo.addEventListener('error', ()=>{ bgVideo.style.display='none'; });
+
+  // FIX: video must NEVER visibly pause. If the browser ever pauses it for
+  // any reason (buffering stall, background/foreground switch on some
+  // devices, etc.) — resume it immediately, silently.
+  bgVideo.addEventListener('pause', ()=>{
+    if(videoWorking) bgVideo.play().catch(()=>{});
+  });
+
+  // Seamless loop — clean restart in case the native loop attribute stutters
+  bgVideo.addEventListener('ended', ()=>{
+    bgVideo.currentTime = 0;
+    bgVideo.play().catch(()=>{});
+  });
+
+  // Initial autoplay — always starts muted, which every browser allows
+  // unconditionally. This call happens exactly once, on load.
+  bgVideo.play().catch(()=>{});
+
+}catch(e){}
+
+// Resume playback if the tab comes back into focus and it somehow stopped
+document.addEventListener('visibilitychange', ()=>{
+  if(!document.hidden && videoWorking && bgVideo.paused) bgVideo.play().catch(()=>{});
+});
+
+// FIX: sound turns on with the very FIRST tap/click ANYWHERE on the page —
+// dock items, form fields, buttons, doesn't matter what's tapped. This is
+// as close to "fully automatic" as browsers allow (a page can never play
+// sound with zero interaction — that's a hard rule on every browser, not
+// something any code can bypass). Runs exactly ONCE, and — critically —
+// it only flips `.muted`. It never calls .play() again, because the video
+// is already playing; re-calling play() while already playing is exactly
+// what was causing the pause/stutter before.
+function firstGestureUnmute(){
+  if(!videoWorking) return;
+  bgVideo.muted = false;
+  mediaToggle.textContent = '🔊';
+  document.removeEventListener('pointerdown', firstGestureUnmute, true);
+  document.removeEventListener('keydown', firstGestureUnmute, true);
+}
+document.addEventListener('pointerdown', firstGestureUnmute, true);
+document.addEventListener('keydown', firstGestureUnmute, true);
+
+// Manual toggle — ONLY flips the mute flag. Never touches play()/pause().
+// This is what stops the toggle button itself from ever causing a stutter.
+function toggleMedia(){
+  clickSound();
+  if(!videoWorking)return;
+  bgVideo.muted = !bgVideo.muted;
+  mediaToggle.textContent = bgVideo.muted ? '🔇' : '🔊';
+}
+
+// ═══ CLICK SOUND (synthesized — no file needed) ═══
+let actx=null;
+function clickSound(){
+  try{
+    if(!actx) actx = new (window.AudioContext||window.webkitAudioContext)();
+    if(actx.state==='suspended') actx.resume();
+    const t=actx.currentTime;
+    const o=actx.createOscillator(), g=actx.createGain();
+    o.type='sine'; o.frequency.setValueAtTime(920,t); o.frequency.exponentialRampToValueAtTime(400,t+.08);
+    g.gain.setValueAtTime(.09,t); g.gain.exponentialRampToValueAtTime(.001,t+.09);
+    o.connect(g); g.connect(actx.destination); o.start(t); o.stop(t+.1);
+  }catch(e){}
+}
+document.addEventListener('click',function(e){
+  const el=e.target.closest('button,.btn,.dock-item,.ti,.ibtn,.sheet-close,#mediaToggle,input[type=checkbox]');
+  if(el) clickSound();
+},true);
+
+// ═══ PARTICLE FIELD ═══
+// ROOT-CAUSE FIX: this whole block was NOT wrapped in try/catch. On some
+// devices/browsers (low-end Android, data-saver / "Lite" modes) canvas
+// getContext('2d') can come back null instead of throwing gracefully —
+// and since this IIFE runs immediately at script-parse time, an
+// unguarded throw here HALTS EVERYTHING defined after it in this same
+// <script> block. That means doLogin, autoLogin, initFirebase — the
+// entire login system — would silently never get defined, which is
+// exactly "click karta hoon kuch nahi hota, no error, no animation."
+// Wrapping it means a decorative background effect can now fail
+// quietly on unusual devices without ever being able to take the login
+// system down with it.
+try{
+  (function(){
+    const cvs=document.getElementById('pField');
+    if(!cvs)return;
+    const ctx=cvs.getContext('2d');
+    if(!ctx)return;
+    let w,h,pts=[];
+    function resize(){w=cvs.width=innerWidth;h=cvs.height=innerHeight;pts=[];const n=Math.min(50,Math.floor(w*h/28000));
+      for(let i=0;i<n;i++)pts.push({x:Math.random()*w,y:Math.random()*h,vx:(Math.random()-.5)*.22,vy:(Math.random()-.5)*.22});}
+    function step(){
+      try{
+        ctx.clearRect(0,0,w,h);
+        for(const p of pts){p.x+=p.vx;p.y+=p.vy;if(p.x<0||p.x>w)p.vx*=-1;if(p.y<0||p.y>h)p.vy*=-1;}
+        for(let i=0;i<pts.length;i++){
+          ctx.beginPath();ctx.arc(pts[i].x,pts[i].y,1.4,0,7);ctx.fillStyle='rgba(255,216,77,.35)';ctx.fill();
+          for(let j=i+1;j<pts.length;j++){const dx=pts[i].x-pts[j].x,dy=pts[i].y-pts[j].y,d=Math.sqrt(dx*dx+dy*dy);
+            if(d<115){ctx.beginPath();ctx.moveTo(pts[i].x,pts[i].y);ctx.lineTo(pts[j].x,pts[j].y);ctx.strokeStyle='rgba(139,124,255,'+(0.12*(1-d/115))+')';ctx.lineWidth=1;ctx.stroke();}}
+        }
+        requestAnimationFrame(step);
+      }catch(e){} // a frame failing never kills the animation loop or anything else again
+    }
+    resize();window.addEventListener('resize',resize);step();
+  })();
+}catch(e){ console.error('[FUN XPro Nova] Particle field failed to start (non-fatal):', e); }
+
+function tilt3d(e,el){
+  if(window.innerWidth<=780)return;
+  const r=el.getBoundingClientRect();const x=e.clientX-r.left, y=e.clientY-r.top;
+  const cx=r.width/2, cy=r.height/2;const rx=((y-cy)/cy)*-5, ry=((x-cx)/cx)*5;
+  el.style.transform='perspective(900px) rotateX('+rx+'deg) rotateY('+ry+'deg) translateZ(4px)';
+  el.style.setProperty('--mx',x+'px');el.style.setProperty('--my',y+'px');
+}
+function untilt3d(el){el.style.transform='perspective(900px) rotateX(0) rotateY(0)';}
+
+let db=null, allUsers={}, allDeposits={}, allAudit={}, allDepReq={};
+let pendingMobile='';
+
+// ═══════════════════════════════════════════
+//  LOGIN SYSTEM — v25 rebuild: intentionally as simple and defensive
+//  as possible. No auto-submit, no obfuscation, no timing-dependent
+//  auto-login IIFE — every one of those was a possible (even if never
+//  fully confirmed) point of silent failure. This version:
+//   • wires the button via addEventListener after window 'load' —
+//     removes any chance of a script-order/timing race
+//   • auto-clears any localStorage saved by an older build on first
+//     run of this version, so stale/incompatible saved data from
+//     earlier iterations can never silently interfere again
+//   • logs every step to console so a real failure is diagnosable
+//   • never auto-submits — you always get one deliberate tap, and
+//     that tap always does something visible (success, error, or an
+//     explicit "please reload" message if the page itself didn't
+//     finish loading correctly)
+// ═══════════════════════════════════════════
+const APP_BUILD = 'v26';
+const LOGIN_KEY = 'fxa_login_v2'; // new key name — never collides with any older build's saved format
+
+function safeGet(k){ try{ return localStorage.getItem(k); }catch(e){ return null; } }
+function safeSet(k,v){ try{ localStorage.setItem(k,v); }catch(e){} }
+function safeRemove(k){ try{ localStorage.removeItem(k); }catch(e){} }
+
+(function autoClearOldBuildData(){
+  try{
+    if(safeGet('fxa_build') !== APP_BUILD){
+      const toRemove=[];
+      for(let i=0;i<localStorage.length;i++){
+        const k=localStorage.key(i);
+        if(k && k.indexOf('fxa')===0) toRemove.push(k);
+      }
+      toRemove.forEach(safeRemove);
+      safeSet('fxa_build', APP_BUILD);
+      console.log('[FUN XPro Nova] New build detected — cleared '+toRemove.length+' old saved key(s).');
+    }
+  }catch(e){}
+})();
+
+function loadSavedLogin(){ try{ const r=safeGet(LOGIN_KEY); return r?JSON.parse(r):{}; }catch(e){ return {}; } }
+function saveLogin(url,pass){ saveLoginRaw({url,pass}); }
+function saveLoginRaw(obj){ try{ safeSet(LOGIN_KEY, JSON.stringify(obj)); }catch(e){} }
+function clearSavedLogin(){
+  safeRemove(LOGIN_KEY);
+  const u=document.getElementById('gFbUrl'), p=document.getElementById('gPass');
+  if(u) u.value=''; if(p) p.value='';
+  showLoginError('Saved login cleared — enter your details fresh.');
+}
+
+function showLoginError(msg){
+  console.log('[FUN XPro Nova]', msg);
+  const ge=document.getElementById('gateErr');
+  if(ge){
+    ge.textContent=msg;
+    ge.style.cssText='color:#fff;font-weight:800;font-size:12px;padding:10px 12px;'
+      +'background:rgba(255,75,92,.18);border:1px solid rgba(255,75,92,.5);border-radius:10px;'
+      +'margin-top:12px;text-align:center;';
+  }
+}
+function resetLoginBtn(){
+  const btn=document.getElementById('loginBtn');
+  if(btn){btn.classList.remove('loading');
+    btn.innerHTML='<span class="gbtn-shine"></span><span class="gbtn-txt">UNLOCK CONSOLE</span><span class="gbtn-arrow">➜</span>';}
+}
+
+function handleLoginClick(){
+  console.log('[FUN XPro Nova] Unlock Console tapped');
+  try{ if(typeof clickSound==='function') clickSound(); }catch(e){}
+
+  const urlField=document.getElementById('gFbUrl');
+  const passField=document.getElementById('gPass');
+  if(!urlField || !passField){
+    alert('FUN XPro Nova: the login form did not load correctly. Please fully reload the page.');
+    return;
+  }
+  const url=urlField.value.trim();
+  const pass=passField.value.trim();
+  const saved=loadSavedLogin();
+  const finalUrl=url || saved.url || '';
+
+  const fUrl=document.getElementById('fUrl'), fPass=document.getElementById('fPass');
+  if(fUrl) fUrl.classList.remove('err'); if(fPass) fPass.classList.remove('err');
+  const ge=document.getElementById('gateErr'); if(ge){ge.textContent='';ge.style.cssText='';}
+
+  if(!finalUrl){
+    showLoginError('Enter your Firebase Database URL');
+    if(fUrl) fUrl.classList.add('err');
+    return;
+  }
+  if(pass!=='funxpro786' && pass!==saved.pass){
+    showLoginError('Incorrect password');
+    if(fPass) fPass.classList.add('err');
+    const card=document.getElementById('gateCard');
+    if(card){card.classList.remove('wrong');void card.offsetWidth;card.classList.add('wrong');}
+    return;
+  }
+  if(typeof firebase==='undefined'){
+    showLoginError('Firebase library failed to load — check your internet connection and reload the page.');
+    return;
+  }
+
+  saveLogin(finalUrl,pass);
+  const btn=document.getElementById('loginBtn');
+  if(btn){btn.classList.add('loading');btn.innerHTML='<div class="orbit-loader"></div>';}
+
+  setTimeout(function(){
+    try{
+      if(firebase.apps && firebase.apps.length){
+        db=firebase.apps[0].database();
+      }else{
+        firebase.initializeApp({databaseURL:finalUrl});
+        db=firebase.database();
+      }
+      console.log('[FUN XPro Nova] Firebase connected — opening dashboard');
+      const burst=document.getElementById('successBurst');
+      if(burst) burst.classList.add('play');
+      setTimeout(function(){
+        const gate=document.getElementById('gate');
+        if(gate){
+          gate.style.opacity='0';gate.style.transform='scale(1.04)';
+          gate.style.transition='opacity .4s ease, transform .4s ease';gate.style.pointerEvents='none';
+        }
+      },250);
+      setTimeout(function(){
+        const gate=document.getElementById('gate');
+        if(gate) gate.style.display='none';
+        if(burst) burst.classList.remove('play');
+        const app=document.getElementById('app');
+        if(app) app.classList.add('show','entering');
+        loadAll();
+      },680);
+    }catch(e){
+      console.error('[FUN XPro Nova] Firebase connect failed:', e);
+      showLoginError('Connection failed — '+e.message);
+      resetLoginBtn();
+    }
+  },300);
+}
+
+// Wired only after the window has FULLY finished loading — the safest
+// possible timing, removes any dependency on script execution order.
+window.addEventListener('load', function(){
+  try{
+    console.log('[FUN XPro Nova] Build '+APP_BUILD+' — window loaded, wiring gate');
+    const saved=loadSavedLogin();
+    if(saved.url){ const f=document.getElementById('gFbUrl'); if(f) f.value=saved.url; }
+    // Password is intentionally NOT pre-filled or auto-submitted — every
+    // login is one deliberate, visible tap. This removes every timing
+    // edge case the old auto-login flow could hit.
+    const btn=document.getElementById('loginBtn');
+    if(btn) btn.addEventListener('click', handleLoginClick);
+    const clearLink=document.getElementById('clearDataLink');
+    if(clearLink) clearLink.addEventListener('click', clearSavedLogin);
+  }catch(e){
+    console.error('[FUN XPro Nova] Gate wiring failed:', e);
+  }
+});
+
+function goSec(name){
+  document.querySelectorAll('.dock-item,.ti').forEach(n=>n.classList.toggle('active',n.dataset.sec===name));
+  document.querySelectorAll('.section').forEach(s=>s.classList.remove('active'));
+  document.getElementById('sec-'+name).classList.add('active');window.scrollTo({top:0,behavior:'smooth'});
+}
+function toast(msg,type,icon){const box=document.getElementById('toasts');const t=document.createElement('div');t.className='toast '+type;
+  t.innerHTML='<div class="tic">'+icon+'</div><div>'+msg+'</div>';box.appendChild(t);
+  setTimeout(()=>{t.classList.add('out');setTimeout(()=>t.remove(),300);},3200);}
+function toastOk(m){toast(m,'success','✓');}
+function toastErr(m){toast(m,'error','✕');}
+function toastInfo(m){toast(m,'info','ℹ');}
+function openOv(id){document.getElementById(id).classList.add('show');}
+function closeOv(id){document.getElementById(id).classList.remove('show');}
+
+function loadAll(){
+  db.ref('Users').on('value',s=>{allUsers=s.val()||{};renderUsers();renderDepositReq();});
+  db.ref('DepositRequired').on('value',s=>{allDepReq=s.val()||{};renderDepositReq();renderTodayReq();});
+  db.ref('DepositLogs').on('value',s=>{allDeposits=s.val()||{};renderDeposits();});
+  db.ref('AuditLogs').limitToLast(200).on('value',s=>{allAudit=s.val()||{};renderAudit();});
+  db.ref('Config').on('value',s=>{const c=s.val()||{};
+    document.getElementById('cfgMin').value=c.minDepositDetect||50;
+    document.getElementById('cfgLowBal').value=c.lowBalanceThreshold||50;
+    document.getElementById('cfgTg').value=c.telegramLink||'';document.getElementById('cfgDl').value=c.downloadUrl||'';});
+  db.ref('Config/FunJashcore').on('value',s=>{fillBranding(s.val()||{});});
+}
+
+function logAudit(action,target){db.ref('AuditLogs').push({actor:'ADMIN',action,target,timestamp:Date.now()});}
+
+
+function renderUsers(){
+  const q=(document.getElementById('userSearch').value||'').toLowerCase();
+  const tbody=document.getElementById('usersBody');tbody.innerHTML='';
+  const mobiles=Object.keys(allUsers).filter(m=>{const u=allUsers[m];return m.includes(q)||(u.uid||'').toLowerCase().includes(q);});
+  document.getElementById('usersEmpty').style.display=mobiles.length?'none':'block';
+  mobiles.forEach((m,i)=>{
+    const u=allUsers[m];let dep=0;Object.values((allDeposits[m])||{}).forEach(d=>dep+=parseFloat(d.amount||0));
+    const banned = u.accountStatus==='BLOCKED'||u.accountStatus==='SUSPENDED';
+    const stBadge = banned ? '<span class="badge badge-blocked">⛔ '+u.accountStatus+'</span>' : '<span class="badge badge-active">● Active</span>';
+    const tr=document.createElement('tr');tr.className='row-in';tr.style.animationDelay=(Math.min(i,20)*0.02)+'s';
+    tr.innerHTML=`<td class="mono">${m}</td><td class="mono">${u.uid||'—'}</td><td class="mono">₹${dep.toLocaleString('en-IN')}</td>
+      <td>${stBadge}</td>
+      <td><div class="act-row" style="justify-content:flex-end">
+        <button class="ibtn" title="View" onclick="viewUser('${m}')">👁</button>
+        <button class="ibtn" style="color:var(--cyan)" title="Send deposit required" onclick="openDepositReq('${m}')">🎯</button>
+        <button class="ibtn ${banned?'':'danger'}" title="${banned?'Unban':'Ban'}" onclick="${banned?'unbanUser':'banUser'}('${m}')">${banned?'✅':'⛔'}</button>
+        <button class="ibtn danger" title="Delete" onclick="openDelete('${m}')">🗑</button></div></td>`;
+    tbody.appendChild(tr);
+  });
+}
+
+function viewUser(m){
+  const u=allUsers[m]||{};let dep=0,depCount=0;Object.values((allDeposits[m])||{}).forEach(d=>{dep+=parseFloat(d.amount||0);depCount++;});
+  const banned = u.accountStatus==='BLOCKED'||u.accountStatus==='SUSPENDED';
+  document.getElementById('detailBody').innerHTML=`
+    <div class="kv"><b>Mobile</b><span>${m}</span></div><div class="kv"><b>UID</b><span>${u.uid||'—'}</span></div>
+    <div class="kv"><b>Account Status</b><span>${u.accountStatus||'ACTIVE'}</span></div>
+    <div class="kv"><b>Device</b><span style="font-size:11px">${u.brand||'—'}</span></div>
+    <div class="kv"><b>Registered</b><span style="font-size:11px">${u.time||'—'}</span></div>
+    <div class="kv"><b>Live Wallet Balance</b><span>₹${u.balance||0}</span></div>
+    <div class="kv" style="border-bottom:none"><b>Total Deposited (log)</b><span>₹${dep.toLocaleString('en-IN')} (${depCount})</span></div>
+    <div class="sheet-actions" style="margin-top:17px"><button class="btn btn-ghost" onclick="closeOv('ovDetail')">Close</button>
+    <button class="btn ${banned?'btn-ghost':'btn-danger'}" onclick="closeOv('ovDetail');${banned?'unbanUser':'banUser'}('${m}')">${banned?'✅ Unban':'⛔ Ban'}</button></div>`;
+  openOv('ovDetail');
+}
+function openDelete(m){pendingMobile=m;document.getElementById('deleteMob').textContent=m;
+  document.getElementById('deleteConfirmInput').value='';document.getElementById('deleteBtn').disabled=true;
+  openOv('ovDelete');setTimeout(()=>document.getElementById('deleteConfirmInput').focus(),350);}
+function checkDeleteConfirm(){const val=document.getElementById('deleteConfirmInput').value.trim();document.getElementById('deleteBtn').disabled = (val!==pendingMobile);}
+function confirmDeleteUser(){
+  const m=pendingMobile;const btn=document.getElementById('deleteBtn');btn.disabled=true;btn.innerHTML='<div class="orbit-loader"></div> Deleting…';
+  const u=allUsers[m]||{};const refCode=u.referralCode;const updates={};
+  updates['Users/'+m]=null;updates['dbRef/'+m]=null;updates['VIP/'+m]=null;updates['DepositLogs/'+m]=null;updates['Notifications/'+m]=null;
+  if(refCode) updates['ReferralCodes/'+refCode]=null;
+  db.ref('VipEntitlements').orderByChild('mobile').equalTo(m).once('value').then(entSnap=>{
+    entSnap.forEach(child=>{ updates['VipEntitlements/'+child.key]=null; });return db.ref().update(updates);
+  }).then(()=>{logAudit('USER_DELETED_ADMIN',m+(refCode?' (code:'+refCode+')':''));toastOk('User '+m+' fully deleted');closeOv('ovDelete');
+    btn.disabled=false;btn.innerHTML='Delete Everything';
+  }).catch(e=>{toastErr('Delete failed: '+e.message);btn.disabled=false;btn.innerHTML='Delete Everything';});
+}
+
+// ── Deposit Required — per-user automatic target-balance tracking ──
+// FIX (Phase 11): requiredAmount is an ADD-ON amount ("deposit ₹X more"),
+// not an absolute target. baseBalance snapshots the user's live balance
+// at the moment the admin sends the requirement; targetBalance (stored
+// alongside it) = baseBalance + requiredAmount is what the app actually
+// compares the live balance against to auto-clear the popup.
+let depReqBaseBal=0;
+function openDepositReq(m){
+  pendingMobile=m;
+  document.getElementById('depReqMob').textContent=m;
+  const bal=parseFloat((allUsers[m]||{}).balance||0);
+  depReqBaseBal=bal;
+  document.getElementById('depReqCurBal').textContent='₹'+bal.toLocaleString('en-IN');
+  document.getElementById('depReqAmount').value='';
+  depReqUpdatePreview();
+  document.getElementById('depReqSendBtn').disabled=false;document.getElementById('depReqSendBtn').innerHTML='Send Requirement';
+  openOv('ovDepositReq');
+  setTimeout(()=>document.getElementById('depReqAmount').focus(),350);
+}
+function depReqUpdatePreview(){
+  const amt=parseFloat(document.getElementById('depReqAmount').value)||0;
+  document.getElementById('depReqAmountPreview').textContent=amt.toLocaleString('en-IN');
+  document.getElementById('depReqTargetPreview').textContent=(depReqBaseBal+amt).toLocaleString('en-IN');
+}
+function confirmSendDepositReq(){
+  const m=pendingMobile;
+  const amt=parseFloat(document.getElementById('depReqAmount').value);
+  if(!amt||amt<=0){toastErr('Enter a valid amount');return;}
+  const btn=document.getElementById('depReqSendBtn');btn.disabled=true;btn.innerHTML='<div class="orbit-loader"></div>';
+  const baseBal=parseFloat((allUsers[m]||{}).balance||0);
+  const target=baseBal+amt;
+  const payload={requiredAmount:amt,baseBalance:baseBal,targetBalance:target,status:'PENDING',createdAt:Date.now(),createdBy:'admin'};
+  db.ref('DepositRequired/'+m).set(payload).then(()=>{
+    logAudit('DEPOSIT_REQUIRED_SENT',m+' → +₹'+amt+' (target ₹'+target+')');
+    toastOk('Deposit requirement of ₹'+amt+' sent to '+m);
+    closeOv('ovDepositReq');btn.disabled=false;btn.innerHTML='Send Requirement';
+  }).catch(e=>{toastErr('Failed: '+e.message);btn.disabled=false;btn.innerHTML='Send Requirement';});
+}
+// Main list — FIX (Phase 11): now shows every user (A-Z, like the Users
+// tab) instead of only users with an existing DepositRequired entry, so
+// admin can set a requirement for anyone directly from here.
+function renderDepositReq(){
+  const q=(document.getElementById('depReqSearch').value||'').toLowerCase();
+  const tbody=document.getElementById('depReqBody');if(!tbody)return;tbody.innerHTML='';
+  const mobiles=Object.keys(allUsers).filter(m=>m.includes(q));
+  document.getElementById('depReqEmpty').style.display=mobiles.length?'none':'block';
+  mobiles.forEach((m,i)=>{
+    const liveBal=parseFloat((allUsers[m]||{}).balance||0);
+    const d=allDepReq[m];
+    let stBadge='<span class="badge badge-none">Not Set</span>';
+    if(d){
+      if(d.status==='PENDING'){
+        const tgt=(d.targetBalance!=null&&d.targetBalance>0)?d.targetBalance:(d.requiredAmount||0);
+        stBadge='<span class="badge badge-warn">⏳ +₹'+(d.requiredAmount||0).toLocaleString('en-IN')+' (target ₹'+Math.round(tgt).toLocaleString('en-IN')+')</span>';
+      }else{
+        stBadge='<span class="badge badge-active">✓ Fulfilled</span>';
+      }
+    }
+    const tr=document.createElement('tr');tr.className='row-in';tr.style.animationDelay=(Math.min(i,20)*0.02)+'s';
+    tr.innerHTML=`<td class="mono">${m}</td><td class="mono" style="color:var(--mint)">₹${liveBal.toLocaleString('en-IN')}</td>
+      <td>${stBadge}</td>
+      <td><div class="act-row" style="justify-content:flex-end">
+      <button class="ibtn" style="color:var(--cyan)" title="Set deposit requirement" onclick="openDepositReq('${m}')">📌 Deposit Set</button>
+      </div></td>`;
+    tbody.appendChild(tr);
+  });
+}
+function cancelDepositReq(m){
+  db.ref('DepositRequired/'+m).remove().then(()=>{logAudit('DEPOSIT_REQUIRED_CANCELLED',m);toastOk('Cleared for '+m);});
+}
+
+// ── Today Request List — everything sent today, + manual override ──
+function openTodayReqList(){renderTodayReq();openOv('ovTodayReq');}
+function isToday(ts){
+  if(!ts)return false;
+  const d=new Date(ts),n=new Date();
+  return d.getFullYear()===n.getFullYear()&&d.getMonth()===n.getMonth()&&d.getDate()===n.getDate();
+}
+function renderTodayReq(){
+  const tbody=document.getElementById('todayReqBody');if(!tbody)return;tbody.innerHTML='';
+  const entries=Object.entries(allDepReq).filter(([m,d])=>isToday(d.createdAt));
+  entries.sort((a,b)=>(b[1].createdAt||0)-(a[1].createdAt||0));
+  document.getElementById('todayReqEmpty').style.display=entries.length?'none':'block';
+  entries.forEach(([m,d])=>{
+    const liveBal=parseFloat((allUsers[m]||{}).balance||0);
+    const pending=d.status==='PENDING';
+    const tgt=(d.targetBalance!=null&&d.targetBalance>0)?d.targetBalance:(d.requiredAmount||0);
+    const stBadge=pending?'<span class="badge badge-warn">⏳ Pending</span>':'<span class="badge badge-active">✓ Fulfilled</span>';
+    const tr=document.createElement('tr');tr.className='row-in';
+    tr.innerHTML=`<td class="mono">${m}</td><td class="mono" style="color:var(--gold);font-weight:800">₹${(d.requiredAmount||0).toLocaleString('en-IN')}</td>
+      <td class="mono">₹${Math.round(tgt).toLocaleString('en-IN')}</td>
+      <td class="mono" style="color:var(--mint)">₹${liveBal.toLocaleString('en-IN')}</td><td>${stBadge}</td>
+      <td><div class="act-row" style="justify-content:flex-end">
+      ${pending?`<button class="ibtn" style="color:var(--mint)" title="Manually mark fulfilled" onclick="completeDepositManual('${m}')">✓ Complete Deposit</button>`:''}
+      <button class="ibtn danger" title="${pending?'Cancel requirement':'Clear entry'}" onclick="cancelDepositReq('${m}')">${pending?'✕':'🗑'}</button>
+      </div></td>`;
+    tbody.appendChild(tr);
+  });
+}
+// Manual override — the app's own listener reacts the instant `status`
+// leaves PENDING, so this dismisses the popup on the user's device just
+// like the automatic path does. Use only when needed; automatic balance
+// detection remains the normal, expected way requirements get fulfilled.
+function completeDepositManual(m){
+  const liveBal=parseFloat((allUsers[m]||{}).balance||0);
+  db.ref('DepositRequired/'+m).update({status:'FULFILLED',fulfilledAt:Date.now(),fulfilledBalance:liveBal,completedBy:'admin-manual'})
+    .then(()=>{logAudit('DEPOSIT_REQUIRED_MANUAL_COMPLETE',m);toastOk('Marked fulfilled for '+m);renderTodayReq();})
+    .catch(e=>toastErr('Failed: '+e.message));
+}
+
+// ── App Branding & Access — Firebase Config/FunJashcore ──
+(function buildBrandNumberRows(){
+  const grid=document.getElementById('brNumGrid');if(!grid)return;
+  for(let i=0;i<10;i++){
+    const row=document.createElement('div');row.className='brand-num';
+    row.innerHTML='<div class="brand-num-badge">'+i+'</div>'
+      +'<input class="field-i" id="brNum'+i+'" placeholder="Number '+i+' image URL" oninput="brPreview(\'brNum'+i+'\',\'brNumP'+i+'\')">'
+      +'<img id="brNumP'+i+'" alt="'+i+'">';
+    grid.appendChild(row);
+  }
+})();
+function brValidUrl(v){v=(v||'').trim();return !v||/^https?:\/\/.+/i.test(v);}
+function brPreview(inputId,imgId){
+  const url=(document.getElementById(inputId).value||'').trim();
+  const img=document.getElementById(imgId);
+  const inp=document.getElementById(inputId);
+  inp.style.borderColor=brValidUrl(url)?'':'var(--danger)';
+  if(!url||!brValidUrl(url)){img.removeAttribute('src');img.style.opacity='.18';return;}
+  img.onload=()=>{img.style.opacity='1';};img.onerror=()=>{img.style.opacity='.18';};img.src=url;
+}
+function fillBranding(data){
+  data=data&&typeof data==='object'?data:{};
+  const nums=data.numberImages&&typeof data.numberImages==='object'?data.numberImages:{};
+  if(!document.getElementById('brTitle').dataset.touched){
+    document.getElementById('brTitle').value=data.title||'FUN JASHCORE';
+    document.getElementById('brSubtitle').value=data.subtitle||'TOOL SIGNAL';
+    document.getElementById('brWingoUrl').value=data.wingoUrl||'#/main/WinGo?typeId=1';
+    document.getElementById('brToolDep').value=(data.toolDepositAmount!=null?data.toolDepositAmount:300);
+    for(let i=0;i<10;i++)document.getElementById('brNum'+i).value=nums[String(i)]||nums[i]||'';
+  }
+  for(let i=0;i<10;i++)brPreview('brNum'+i,'brNumP'+i);
+}
+function saveBranding(){
+  let ok=true;
+  const checkIds=[];for(let i=0;i<10;i++)checkIds.push('brNum'+i);
+  checkIds.forEach(id=>{const el=document.getElementById(id);const good=brValidUrl(el.value);el.style.borderColor=good?'':'var(--danger)';if(!good)ok=false;});
+  const route=(document.getElementById('brWingoUrl').value||'').trim();
+  const routeOk=route.startsWith('#/')||/^https?:\/\//i.test(route);
+  document.getElementById('brWingoUrl').style.borderColor=routeOk?'':'var(--danger)';
+  if(!routeOk)ok=false;
+  if(!ok){toastErr('Check invalid image URL or WinGo route');return;}
+
+  const nums={};for(let i=0;i<10;i++)nums[String(i)]=(document.getElementById('brNum'+i).value||'').trim();
+  const payload={
+    title:(document.getElementById('brTitle').value||'FUN JASHCORE').trim(),
+    subtitle:(document.getElementById('brSubtitle').value||'TOOL SIGNAL').trim(),
+    wingoUrl:(document.getElementById('brWingoUrl').value||'#/main/WinGo?typeId=1').trim(),
+    toolDepositAmount:Number(document.getElementById('brToolDep').value)||300,
+    numberImages:nums,
+    updatedAt:Date.now()
+  };
+  const btn=document.getElementById('brSaveBtn');btn.disabled=true;btn.innerHTML='<div class="orbit-loader"></div> Saving…';
+  db.ref('Config/FunJashcore').set(payload).then(()=>{
+    logAudit('BRANDING_SAVED','Config/FunJashcore updated');
+    toastOk('Branding & access saved ✓');
+    document.getElementById('brTitle').dataset.touched='';
+    btn.disabled=false;btn.innerHTML='Save Branding & Access';
+  }).catch(e=>{
+    toastErr('Save failed: '+e.message);
+    btn.disabled=false;btn.innerHTML='Save Branding & Access';
+  });
+}
+document.getElementById('brTitle').addEventListener('input',()=>{document.getElementById('brTitle').dataset.touched='1';});
+
+function renderDeposits(){
+  const tbody=document.getElementById('depsBody');tbody.innerHTML='';let rows=[];
+  Object.keys(allDeposits).forEach(m=>{Object.entries(allDeposits[m]||{}).forEach(([id,d])=>{rows.push({mobile:m,...d});});});
+  rows.sort((a,b)=>(b.detectedAt||0)-(a.detectedAt||0));
+  document.getElementById('depsEmpty').style.display=rows.length?'none':'block';
+  rows.slice(0,150).forEach((d,i)=>{
+    const tr=document.createElement('tr');tr.className='row-in';tr.style.animationDelay=(Math.min(i,20)*0.015)+'s';
+    tr.innerHTML=`<td class="mono">${d.mobile}</td><td class="mono" style="color:var(--mint);font-weight:800">₹${parseFloat(d.amount||0).toLocaleString('en-IN')}</td>
+      <td><span class="badge ${d.source==='MANUAL_ADMIN'?'badge-warn':'badge-none'}">${d.source||'—'}</span></td>
+      <td style="font-size:11px;color:var(--ink-dim)">${d.detectedAt?new Date(d.detectedAt).toLocaleString('en-IN'):'—'}</td>`;
+    tbody.appendChild(tr);
+  });
+}
+function addManualDeposit(){
+  const m=document.getElementById('mdMobile').value.trim();const amt=parseFloat(document.getElementById('mdAmount').value);
+  if(!m||m.length<8){toastErr('Enter a valid mobile number');return;}
+  if(!amt||amt<=0){toastErr('Enter a valid amount');return;}
+  if(!allUsers[m]){toastErr('User not found: '+m);return;}
+  const now=Date.now();
+  db.ref('Users/'+m+'/balance').once('value',s=>{
+    const prevBal=parseFloat(s.val()||0);const newBal=prevBal+amt;
+    const dep={amount:amt,detectedAt:now,mobile:m,source:'MANUAL_ADMIN',prevBalance:prevBal,newBalance:newBal};
+    db.ref('DepositLogs/'+m).push(dep).then(()=>{
+      db.ref('Users/'+m).update({balance:String(newBal),currentBalance:String(newBal)});
+      logAudit('MANUAL_DEPOSIT_ADMIN',m+' +₹'+amt+' (wallet now ₹'+newBal+')');toastOk('₹'+amt+' added for '+m);
+      document.getElementById('mdMobile').value='';document.getElementById('mdAmount').value='';
+    });
+  });
+}
+
+// ── Ban / unban an account entirely ──
+function banUser(mobile){
+  db.ref('Users/'+mobile+'/accountStatus').set('BLOCKED').then(()=>{
+    logAudit('USER_BANNED', mobile);
+    toastOk(mobile+' banned');
+    renderUsers();
+  });
+}
+function unbanUser(mobile){
+  db.ref('Users/'+mobile+'/accountStatus').set('ACTIVE').then(()=>{
+    logAudit('USER_UNBANNED', mobile);
+    toastOk(mobile+' unbanned');
+    renderUsers();
+  });
+}
+function renderAudit(){
+  const tbody=document.getElementById('auditBody');tbody.innerHTML='';
+  const entries=Object.values(allAudit).sort((a,b)=>(b.timestamp||0)-(a.timestamp||0));
+  entries.slice(0,150).forEach((a,i)=>{
+    const tr=document.createElement('tr');tr.className='row-in';tr.style.animationDelay=(Math.min(i,20)*0.01)+'s';
+    tr.innerHTML=`<td><span class="badge badge-none">${a.actor||'—'}</span></td><td style="font-weight:800;font-size:12px">${a.action||'—'}</td>
+      <td class="mono" style="font-size:11.5px">${a.target||'—'}</td><td style="font-size:11px;color:var(--ink-dim)">${a.timestamp?new Date(a.timestamp).toLocaleString('en-IN'):'—'}</td>`;
+    tbody.appendChild(tr);
+  });
+}
+function saveConfig(){
+  const cfg={minDepositDetect:parseFloat(document.getElementById('cfgMin').value)||50,
+    lowBalanceThreshold:parseFloat(document.getElementById('cfgLowBal').value)||50,
+    telegramLink:document.getElementById('cfgTg').value.trim(),downloadUrl:document.getElementById('cfgDl').value.trim()};
+  db.ref('Config').update(cfg).then(()=>{logAudit('CONFIG_UPDATED','—');toastOk('Config saved');});
+}
+</script>
+</body>
+</html>
